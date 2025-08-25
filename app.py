@@ -164,10 +164,10 @@ def logout():
     return redirect(url_for("login"))
 
 # ===== Public-facing routes =====
-@app.route("/index")
+@app.route("/")
 @login_required
 def home():
-    return render_template("index.html")
+    return render_template("home.html")
 
 @app.route("/home")
 @login_required
@@ -466,4 +466,5 @@ def admin_clear_orders():
 
 if __name__ == "__main__":
     app.run(debug=True,port=5001)
+
 

@@ -91,14 +91,16 @@ def register():
             flash("Please fill all required fields.", "danger")
             return redirect(url_for("register"))
 
+        # Hash password
         hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
         con = get_db()
         cur = con.cursor()
         try:
+            # Insert user data dynamically
             cur.execute(
                 "INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)",
-                ("Admin","krishnakudre.1205@gmail.com","9113087484", hashed_pw),
+                (name, email, phone, hashed_pw),
             )
             con.commit()
             flash("Registration successful! Please login.", "success")
@@ -466,5 +468,6 @@ def admin_clear_orders():
 
 if __name__ == "__main__":
     app.run(debug=True,port=5001)
+
 
 

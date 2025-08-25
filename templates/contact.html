@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - Ayurveda Store</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2e7d32;
+      margin-bottom: 10px;
+    }
+
+    p {
+      text-align: center;
+      color: #555;
+      margin-bottom: 30px;
+    }
+
+    .contact-container {
+      display: flex;
+      gap: 30px;
+      margin: auto;
+      max-width: 900px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    /* Form */
+    .contact-form {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .contact-form label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    .contact-form button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .contact-form button:hover {
+      background-color: #388e3c;
+    }
+
+    /* Info Box */
+    .contact-info {
+      flex: 1;
+      background: #f9fbe7;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .contact-info h3 {
+      margin-top: 0;
+      color: #2e7d32;
+    }
+
+    .contact-info img {
+      margin-top: 15px;
+      width: 150px;
+      border-radius: 10px;
+    }
+
+    /* Map */
+    .map-container {
+      margin-top: 15px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      position: relative;
+    }
+
+    .map-container iframe {
+      width: 100%;
+      height: 200px;
+      border: none;
+    }
+
+    /* Social Icons */
+    .social-links {
+      margin-top: 20px;
+    }
+
+    .social-links a {
+      margin-right: 15px;
+      font-size: 24px;
+      color: #2e7d32;
+    }
+
+    /* Profile Box */
+    .my-profile {
+      display: flex;
+      align-items: center;
+      margin-top: 20px;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .my-profile img.profile-pic {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+
+    .my-profile .profile-details h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .my-profile .profile-details p {
+      margin: 5px 0;
+      color: #555;
+      font-size: 14px;
+    }
+
+    /* Profile beside map */
+    .profile-beside-map {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .profile-beside-map img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .contact-container {
+        flex-direction: column;
+      }
+      .profile-beside-map {
+        position: static;
+        margin-top: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>📩 Contact Us</h2>
+  <p>We’d love to hear from you! Please fill out the form below.</p>
+
+  <div class="contact-container">
+      
+      <!-- Contact Form -->
+      <form action="/send_message" method="POST" class="contact-form">
+          <label for="name">Name:</label>
+          <input type="text" id="name" name="name" required>
+
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+
+          <label for="message">Message:</label>
+          <textarea id="message" name="message" rows="5" required></textarea>
+
+          <button type="submit">🚀 Send Message</button>
+
+          <!-- Profile below button -->
+          <div class="my-profile">
+            <img src="static/images/kris.jpg" alt="Krishna Kudre" class="profile-pic">
+            <div class="profile-details">
+                <h3>Krishna Kudre</h3>
+                <p>Programmer | Web Developer</p>
+                <p>#AI | Passionate about web apps</p>
+            </div>
+          </div>
+      </form>
+
+      <!-- Contact Info -->
+      <div class="contact-info">
+          <h3>📍 Our Address</h3>
+          <p><strong>Ayurveda Wellness Store</strong></p>
+          <p>SRM Layout, Ballari, Karnataka, India</p>
+          <p><strong>📞 Phone:</strong> +91 98765 43484</p>
+          <p><strong>📧 Email:</strong> aishwarya@ayurvedastore.com</p>
+          <img src="{{ url_for('static', filename='images/insta.jpg') }}" alt="Instagram QR">
+
+          <!-- Google Maps -->
+          <div class="map-container">
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.89983345763!2d76.9366!3d15.1394!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bb73b9a38b4b1b7%3A0xaaa6a1b674e3!2sBallari%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1692549598123!5m2!1sen!2sin" 
+              allowfullscreen="" 
+              loading="lazy" 
+              referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+
+             
+
+          <!-- Social Media -->
+          <div class="social-links">
+            <a href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.facebook.com/" target="_blank"><i class="fab fa-facebook"></i></a>
+            <a href="https://wa.me/919876543484" target="_blank"><i class="fab fa-whatsapp"></i></a>
+          </div>
+      </div>
+
+  </div>
+</body>
+</html>

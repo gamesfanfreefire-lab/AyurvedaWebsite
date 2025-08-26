@@ -296,6 +296,26 @@ def admin_dashboard():
         orders = cur.fetchall()
     return render_template("admin_dashboard.html", orders=orders)
 
+# ✅ Route to display Contact Page
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")
+
+# ✅ Route to handle form submission
+@app.route("/send_message", methods=["POST"])
+def send_message():
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        message = request.form.get("message")
+
+        # ✅ Here you can process the data (save to DB or send email)
+        print(f"Name: {name}, Email: {email}, Message: {message}")
+
+        flash("Your message has been sent successfully!", "success")
+        return redirect(url_for("contact"))
+
 # ===== Run app =====
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+

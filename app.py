@@ -98,6 +98,17 @@ def init_db():
 # Initialize DB
 init_db()
 
+# ===== Sample products =====
+products = [
+    {"name": "Herbal Face Cream", "description": "Natural ingredients for glowing skin", "price": 250, "image": "images/herbalfacecream.jpg"},
+    {"name": "Aloe Vera Gel", "description": "Soothes and hydrates the skin", "price": 180, "image": "images/aleovera.jpg"},
+    {"name": "Ghar Soap", "description": "Pure herbal bathing soap", "price": 70,  "image": "images/gharsoap.jpg"},
+    {"name": "Lotus Powder", "description": "Skin brightening herbal powder", "price": 120, "image": "images/lotus.jpg"},
+    {"name": "Ayur Herbal Shampoo", "description": "Gentle cleansing for hair", "price": 300, "image": "images/ayurherbal.jpg"},
+    {"name": "Aloe Allen Juice", "description": "Detoxifying aloe vera juice", "price": 200, "image": "images/aloeallen.jpg"},
+    {"name": "Eladi Oil", "description": "Traditional ayurvedic oil for skin", "price": 400, "image": "images/eladi.jpg"},
+]
+
 # ===== Decorators =====
 def login_required(f):
     @wraps(f)
@@ -315,7 +326,60 @@ def send_message():
         flash("Your message has been sent successfully!", "success")
         return redirect(url_for("contact"))
 
+
+# ✅ Cart Route
+@app.route("/cart")
+def cart():
+    cart_items = session.get("cart", [])
+    total = sum(item["price"] for item in cart_items)
+    return render_template("cart.html", cart_items=cart_items, total=total)
+
+# ✅ Add item to cart
+@app.route("/add_to_cart", methods=["POST"])
+def add_to_cart():
+    product_name = request.form.get("name")
+    price = float(request.form.get("price"))
+    image = request.form.get("image")
+
+    # Initialize cart if empty
+    if "cart" not in session:
+        session["cart"] = []
+
+    session["cart"].append({"name": product_name, "price": price, "image": image})
+    session.modified = True
+
+    flash(f"{product_name} added to cart!", "success")
+    return redirect(url_for("products_page"))
+
+# ✅ Remove single item from cart
+@app.route("/remove_from_cart/<product_name>")
+def remove_from_cart(product_name):
+    cart = session.get("cart", [])
+    session["cart"] = [item for item in cart if item["name"] != product_name]
+    session.modified = True
+    flash(f"{product_name} removed from cart.", "info")
+    return redirect(url_for("cart"))
+
+# ✅ Clear all items
+@app.route("/clear_cart")
+def clear_cart():
+    session.pop("cart", None)
+    flash("All items removed from your cart.", "warning")
+    return redirect(url_for("cart"))
+
+# ✅ Checkout
+@app.route("/checkout")
+def checkout():
+    if not session.get("cart"):
+        flash("Your cart is empty!", "error")
+        return redirect(url_for("cart"))
+    
+    # For now, just clear the cart after checkout
+    session.pop("cart", None)
+    return "<h2>Thank you for your order!</h2>"
+
 # ===== Run app =====
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+
 

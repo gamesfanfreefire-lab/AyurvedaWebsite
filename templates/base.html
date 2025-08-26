@@ -4,17 +4,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{% block title %}Ayurveda Store{% endblock %}</title>
+  
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; }
-    header { background: #4CAF50; color: #fff; padding: 16px; text-align: center; position: relative; }
-    h1 { margin: 0; }
-    nav { display: flex; justify-content: space-between; align-items: center; position: relative; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #4CAF50;
+      color: #fff;
+      padding: 16px;
+      text-align: center;
+      position: relative;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      max-width: 1200px;
+      margin: auto;
+    }
 
     /* Navbar links */
-    .nav-links { display: flex; list-style: none; padding: 0; margin: 0; transition: transform 0.3s ease-in-out; }
-    .nav-item { margin: 0 10px; }
-    .nav-link { color: #fff; text-decoration: none; }
-    .nav-link:hover { text-decoration: underline; }
+    .nav-links {
+      display: flex;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .nav-item {
+      margin: 0 10px;
+    }
+
+    .nav-link {
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+    }
+
+    .nav-link:hover {
+      text-decoration: underline;
+    }
 
     /* Flash message */
     .flash-message {
@@ -27,11 +68,45 @@
     }
 
     /* Hamburger Menu */
-    .hamburger { display: none; flex-direction: column; cursor: pointer; z-index: 10; }
-    .hamburger div { width: 25px; height: 3px; background-color: #fff; margin: 4px 0; transition: all 0.3s ease; }
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+      z-index: 10;
+    }
 
+    .hamburger div {
+      width: 25px;
+      height: 3px;
+      background-color: #fff;
+      margin: 4px 0;
+      transition: all 0.3s ease;
+    }
+
+    /* Main content responsive */
+    main {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Responsive for mobile screens */
     @media (max-width: 768px) {
-      .hamburger { display: flex; }
+      nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
       .nav-links {
         flex-direction: column;
         background-color: #4CAF50;
@@ -41,15 +116,43 @@
         width: 200px;
         transform: translateX(100%);
       }
-      .nav-links.active { transform: translateX(0); }
-      .nav-item { margin: 15px 0; text-align: center; }
+
+      .nav-links.active {
+        transform: translateX(0);
+      }
+
+      .nav-item {
+        margin: 15px 0;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
     }
 
     /* Hamburger Animation */
-    .hamburger.active div:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-    .hamburger.active div:nth-child(2) { opacity: 0; }
-    .hamburger.active div:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+    .hamburger.active div:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
 
+    .hamburger.active div:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active div:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    /* Extra small screens (phones < 480px) */
+    @media (max-width: 480px) {
+      .nav-link {
+        font-size: 14px;
+      }
+      h1 {
+        font-size: 18px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -77,22 +180,21 @@
           <li class="nav-item"><a href="{{ url_for('login') }}" class="nav-link">Login</a></li>
           <li class="nav-item"><a href="{{ url_for('register') }}" class="nav-link">Register</a></li>
         {% endif %}
-      </ul>
-
-      <!-- Flash messages -->
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          <div class="flash-message">
-            {% for msg in messages %}<p>{{ msg }}</p>{% endfor %}
-          </div>
+        
+        {% if session.get('user_name') == 'Admin' %}
+          <li class="nav-item"><a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a></li>
         {% endif %}
-      {% endwith %}
-
-      {% if session.get('user_name') == 'Admin' %}
-  <li class="nav-item"><a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a></li>
-{% endif %}
-
+      </ul>
     </nav>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-message">
+          {% for msg in messages %}<p>{{ msg }}</p>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
   </header>
 
   <main>

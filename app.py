@@ -6,7 +6,20 @@ from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from itsdangerous import URLSafeTimedSerializer
 
+# ===== 1️⃣ Create Flask app first =====
+app = Flask(__name__)
+app.secret_key = "your_secret_key"  # TODO: replace with a strong random value
+
+# ===== 2️⃣ Database paths =====
+DATABASE_PATH = os.path.join(app.root_path, "database.db")
+ORDERS_FILE = os.path.join(app.root_path, "orders.json")
+
+# ===== 3️⃣ Token serializer for password reset =====
+s = URLSafeTimedSerializer(app.secret_key)
+
+# ===== 4️⃣ Email helper using smtplib =====
 def send_reset_email(to_email, reset_link, user_name):
     sender_email = "your_email@gmail.com"
     sender_password = "your_app_password"  # Use Gmail App Password if 2FA is enabled
@@ -36,18 +49,12 @@ This link will expire in 30 minutes.
     except Exception as e:
         print("Error sending email:", e)
 
-
-DATABASE_PATH = os.path.join(app.root_path, "database.db")
-ORDERS_FILE = os.path.join(app.root_path, "orders.json")
-
-
-# ===== Database helpers =====
+# ===== 5️⃣ Database helpers =====
 def get_db():
     con = sqlite3.connect(DATABASE_PATH)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON;")
     return con
-
 
 def init_db():
     with get_db() as con:
@@ -92,12 +99,10 @@ def init_db():
         """)
         con.commit()
 
-
-# initialize DB
+# Initialize DB
 init_db()
 
-
-# ===== File helpers (orders) =====
+# ===== File helpers =====
 def load_orders():
     if not os.path.exists(ORDERS_FILE):
         return []
@@ -108,12 +113,10 @@ def load_orders():
     except Exception:
         return []
 
-
 def save_orders(orders):
     os.makedirs(os.path.dirname(ORDERS_FILE), exist_ok=True)
     with open(ORDERS_FILE, "w", encoding="utf-8") as f:
         json.dump(orders, f, ensure_ascii=False, indent=2)
-
 
 # ===== Sample products =====
 products = [
@@ -126,7 +129,6 @@ products = [
     {"name": "Eladi Oil", "description": "Traditional ayurvedic oil for skin", "price": 400, "image": "images/eladi.jpg"},
 ]
 
-
 # ===== Decorators =====
 def login_required(f):
     @wraps(f)
@@ -135,7 +137,6 @@ def login_required(f):
             return redirect(url_for("login"))
         return f(*args, **kwargs)
     return decorated
-
 
 def admin_required(f):
     @wraps(f)
@@ -146,8 +147,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
-
-# ===== Auth: register / login / logout =====
+# ===== Auth routes =====
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -177,7 +177,6 @@ def register():
             return redirect(url_for("register"))
 
     return render_template("register.html")
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -223,32 +222,26 @@ def login():
 
     return render_template("login.html")
 
-
 @app.route("/logout")
 def logout():
     session.clear()
     flash("Logged out successfully!", "info")
     return redirect(url_for("login"))
 
-
-# ===== Password Reset Routes =====
+# ===== Password reset routes =====
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
-        
-        # Check if user exists in DB
+
         with get_db() as con:
             cur = con.cursor()
             cur.execute("SELECT id, name FROM users WHERE email=?", (email,))
             user = cur.fetchone()
 
         if user:
-            # Generate secure token
             token = s.dumps(email, salt='password-reset-salt')
             reset_link = url_for('reset_password', token=token, _external=True)
-
-            # Send email using smtplib
             send_reset_email(email, reset_link, user["name"])
 
         flash('If your email exists in our system, a password reset link has been sent.', 'info')
@@ -256,12 +249,9 @@ def forgot_password():
 
     return render_template('forgot_password.html')
 
-
-
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     try:
-        # Validate token, max_age=1800s = 30 minutes
         email = s.loads(token, salt='password-reset-salt', max_age=1800)
     except Exception:
         flash('The password reset link is invalid or has expired.', 'danger')
@@ -269,11 +259,8 @@ def reset_password(token):
 
     if request.method == 'POST':
         password = request.form['password']
-
-        # Hash password
         hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-        # Update password in DB
         with get_db() as con:
             cur = con.cursor()
             cur.execute("UPDATE users SET password=? WHERE email=?", (hashed_pw, email))
@@ -284,13 +271,6 @@ def reset_password(token):
 
     return render_template('reset_password.html')
 
-# ===== Your other existing routes (home, products, cart, checkout, admin, etc.) =====
-# ... Keep all your existing code for products, cart, admin dashboards, etc. unchanged ...
-
+# ===== Main app runner =====
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
-
-
-
-
-

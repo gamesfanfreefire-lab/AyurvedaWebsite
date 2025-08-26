@@ -469,6 +469,19 @@ def forgot_password():
         return redirect(url_for("login"))
     return render_template("forgot_password.html")
 
+@app.route('/admin_logins')
+@admin_required
+def admin_logins():
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("SELECT user_name, email, login_time FROM login_log ORDER BY login_time DESC")
+    all_logins = cur.fetchall()
+    conn.close()
+    return render_template('admin_logins.html', all_logins=all_logins)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+

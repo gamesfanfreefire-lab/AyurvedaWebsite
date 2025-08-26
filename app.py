@@ -461,13 +461,29 @@ def admin_clear_orders():
     return redirect(url_for("admin_dashboard"))
 
 
-@app.route("/forgot_password", methods=["GET", "POST"])
+@app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
-    if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
-        flash(f"If an account with {email} exists, a password reset link has been sent.", "info")
-        return redirect(url_for("login"))
-    return render_template("forgot_password.html")
+    if request.method == 'POST':
+        email = request.form['email']
+        user = User.query.filter_by(email=email).first()  # Check if email exists
+
+        if user:
+            # Generate a secure token valid for 30 minutes
+            token = s.dumps(email, salt='password-reset-salt')
+
+            # Build password reset link
+            reset_link = url_for('reset_password', token=token, _external=True)
+
+            # Send email
+            msg = Message('Password Reset Request', recipients=[email])
+            msg.body = f'Hello {user.name},\n\nClick the link below to reset your password:\n{reset_link}\n\nThis link will expire in 30 minutes.'
+            mail.send(msg)
+
+        flash('If your email exists in our system, a password reset link has been sent.', 'info')
+        return redirect(url_for('login'))
+
+    return render_template('forgot_password.html')
+
 
 @app.route('/admin_logins')
 @admin_required
@@ -480,8 +496,29 @@ def admin_logins():
     conn.close()
     return render_template('admin_logins.html', all_logins=all_logins)
 
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        # Validate token and get email
+        email = s.loads(token, salt='password-reset-salt', max_age=1800)  # 30 minutes
+    except:
+        flash('The password reset link is invalid or has expired.', 'danger')
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        password = request.form['password']
+        user = User.query.filter_by(email=email).first()
+        user.password = hash_password(password)  # Hash the password properly
+        db.session.commit()
+        flash('Your password has been reset successfully!', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html')
+
+
 
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+
 

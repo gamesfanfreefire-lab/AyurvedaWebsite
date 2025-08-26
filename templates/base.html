@@ -36,7 +36,6 @@
       position: relative;
     }
 
-    /* Navbar links */
     .nav-links {
       display: flex;
       list-style: none;
@@ -44,13 +43,13 @@
       margin: 0;
       justify-content: center;
       flex-wrap: wrap;
-      overflow: hidden; /* For smooth animation */
-      max-height: 1000px; /* Big enough to hold links */
-      transition: max-height 0.5s ease-in-out; /* Smooth slide-down */
+      overflow: hidden;
+      max-height: 1000px;
+      transition: max-height 0.5s ease-in-out;
     }
 
     .nav-links.collapsed {
-      max-height: 0; /* Collapsed menu */
+      max-height: 0;
     }
 
     .nav-item {
@@ -71,13 +70,13 @@
     .flash-message {
       background: #dff0d8;
       padding: 10px;
-      margin: 10px 0;
+      margin: 10px auto;
       border: 1px solid #c3e6cb;
       color: #155724;
       border-radius: 5px;
+      max-width: 600px;
     }
 
-    /* Hamburger Menu */
     .hamburger {
       display: none;
       flex-direction: column;
@@ -93,7 +92,6 @@
       transition: all 0.3s ease;
     }
 
-    /* Main content responsive */
     main {
       max-width: 1200px;
       margin: 20px auto;
@@ -108,7 +106,6 @@
       margin: 0 auto;
     }
 
-    /* Responsive for mobile screens */
     @media (max-width: 768px) {
       nav {
         flex-direction: column;
@@ -128,7 +125,7 @@
       }
 
       .nav-links.active {
-        max-height: 500px; /* Enough to show all menu items */
+        max-height: 500px;
       }
 
       .nav-item {
@@ -141,7 +138,6 @@
       }
     }
 
-    /* Hamburger Animation */
     .hamburger.active div:nth-child(1) {
       transform: rotate(45deg) translate(5px, 5px);
     }
@@ -154,7 +150,6 @@
       transform: rotate(-45deg) translate(5px, -5px);
     }
 
-    /* Extra small screens (phones < 480px) */
     @media (max-width: 480px) {
       .nav-link {
         font-size: 14px;
@@ -169,16 +164,20 @@
   <header>
     <h1>🌿 Ayurveda Store</h1>
     <nav>
-      <!-- Hamburger -->
       <div class="hamburger" onclick="toggleMenu()">
         <div></div>
         <div></div>
         <div></div>
       </div>
 
-      <!-- Navigation Links -->
       <ul class="nav-links collapsed">
-        <li class="nav-item"><a href="{{ url_for('home') }}" class="nav-link">Home</a></li>
+        <li class="nav-item">
+          {% if session.get('user_id') %}
+          <a href="{{ url_for('dashboard') }}" class="nav-link">Home</a>
+          {% else %}
+          <a href="{{ url_for('login') }}" class="nav-link">Home</a>
+          {% endif %}
+        </li>
         <li class="nav-item"><a href="{{ url_for('products_page') }}" class="nav-link">Products</a></li>
         <li class="nav-item"><a href="{{ url_for('contact') }}" class="nav-link">Contact</a></li>
         <li class="nav-item"><a href="{{ url_for('cart') }}" class="nav-link">🛒 Cart ({{ session.get('cart', [])|length }})</a></li>
@@ -190,20 +189,26 @@
           <li class="nav-item"><a href="{{ url_for('login') }}" class="nav-link">Login</a></li>
           <li class="nav-item"><a href="{{ url_for('register') }}" class="nav-link">Register</a></li>
         {% endif %}
-        
+
         {% if session.get('user_name') == 'Admin' %}
           <li class="nav-item"><a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a></li>
         {% endif %}
       </ul>
     </nav>
 
-     
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
   </header>
 
   <main>
     {% block content %}{% endblock %}
   </main>
- 
+
   <script>
     function toggleMenu() {
       const navLinks = document.querySelector('.nav-links');
@@ -215,4 +220,3 @@
   </script>
 </body>
 </html>
-

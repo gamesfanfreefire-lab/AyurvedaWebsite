@@ -3,24 +3,39 @@ from functools import wraps
 import sqlite3, bcrypt
 import json, os
 from datetime import datetime
-from mailman.flask import Mail, EmailMessage
-from itsdangerous import URLSafeTimedSerializer  # added for password reset
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-app = Flask(__name__)
-app.secret_key = "your_secret_key"  # TODO: replace with a strong random value
+def send_reset_email(to_email, reset_link, user_name):
+    sender_email = "your_email@gmail.com"
+    sender_password = "your_app_password"  # Use Gmail App Password if 2FA is enabled
 
-# ===== Flask-Mail configuration =====
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Example for Gmail
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
-app.config['MAIL_PASSWORD'] = 'your_email_app_password'  # Use App Password if Gmail 2FA
-app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = to_email
+    message["Subject"] = "Password Reset Request"
 
-mail = Mail(app)
+    body = f"""Hello {user_name},
 
-# ===== Token serializer for password reset =====
-s = URLSafeTimedSerializer(app.secret_key)
+Click the link below to reset your password:
+
+{reset_link}
+
+This link will expire in 30 minutes.
+"""
+    message.attach(MIMEText(body, "plain"))
+
+    # Connect to Gmail SMTP server
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(message)
+        server.quit()
+    except Exception as e:
+        print("Error sending email:", e)
+
 
 DATABASE_PATH = os.path.join(app.root_path, "database.db")
 ORDERS_FILE = os.path.join(app.root_path, "orders.json")
@@ -220,51 +235,54 @@ def logout():
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
-        email = request.form['email']
-        user = User.query.filter_by(email=email).first()  # Check if email exists
+        email = request.form['email'].strip().lower()
+        
+        # Check if user exists in DB
+        with get_db() as con:
+            cur = con.cursor()
+            cur.execute("SELECT id, name FROM users WHERE email=?", (email,))
+            user = cur.fetchone()
 
         if user:
-            # Generate a secure token valid for 30 minutes
+            # Generate secure token
             token = s.dumps(email, salt='password-reset-salt')
-
-            # Build password reset link
             reset_link = url_for('reset_password', token=token, _external=True)
 
-            # Send email
-            msg = EmailMessage(
-                subject='Password Reset Request',
-                body=f'Hello {user.name},\n\nClick the link below to reset your password:\n{reset_link}\n\nThis link will expire in 30 minutes.',
-                to=[email]
-            )
-            msg.send()
+            # Send email using smtplib
+            send_reset_email(email, reset_link, user["name"])
 
-        # This flash should be **aligned with the `if user:`**, not extra indented
         flash('If your email exists in our system, a password reset link has been sent.', 'info')
         return redirect(url_for('login'))
 
     return render_template('forgot_password.html')
 
 
+
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     try:
-        email = s.loads(token, salt='password-reset-salt', max_age=1800)  # 30 min
-    except:
+        # Validate token, max_age=1800s = 30 minutes
+        email = s.loads(token, salt='password-reset-salt', max_age=1800)
+    except Exception:
         flash('The password reset link is invalid or has expired.', 'danger')
         return redirect(url_for('forgot_password'))
 
     if request.method == 'POST':
         password = request.form['password']
-        hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+
+        # Hash password
+        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        # Update password in DB
         with get_db() as con:
             cur = con.cursor()
             cur.execute("UPDATE users SET password=? WHERE email=?", (hashed_pw, email))
             con.commit()
+
         flash('Your password has been reset successfully!', 'success')
         return redirect(url_for('login'))
 
     return render_template('reset_password.html')
-
 
 # ===== Your other existing routes (home, products, cart, checkout, admin, etc.) =====
 # ... Keep all your existing code for products, cart, admin dashboards, etc. unchanged ...

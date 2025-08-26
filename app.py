@@ -221,26 +221,24 @@ def logout():
 def forgot_password():
     if request.method == 'POST':
         email = request.form['email']
-        # Using SQLite instead of SQLAlchemy
-        with get_db() as con:
-            cur = con.cursor()
-            cur.execute("SELECT id, name FROM users WHERE email=?", (email,))
-            user = cur.fetchone()
+        user = User.query.filter_by(email=email).first()  # Check if email exists
 
         if user:
+            # Generate a secure token valid for 30 minutes
             token = s.dumps(email, salt='password-reset-salt')
+
+            # Build password reset link
             reset_link = url_for('reset_password', token=token, _external=True)
 
-            # Using EmailMessage
-msg = EmailMessage(
-    subject="Password Reset Request",
-    body=f"Hello {user.name},\n\nClick the link: {reset_link}\n\nThis link expires in 30 minutes.",
-    to=[email]
-)
-msg.send()
+            # Send email
+            msg = EmailMessage(
+                subject='Password Reset Request',
+                body=f'Hello {user.name},\n\nClick the link below to reset your password:\n{reset_link}\n\nThis link will expire in 30 minutes.',
+                to=[email]
+            )
+            msg.send()
 
-
-
+        # This flash should be **aligned with the `if user:`**, not extra indented
         flash('If your email exists in our system, a password reset link has been sent.', 'info')
         return redirect(url_for('login'))
 
@@ -273,6 +271,7 @@ def reset_password(token):
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+
 
 
 

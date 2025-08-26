@@ -46,7 +46,7 @@ This link will expire in 30 minutes.
         server.send_message(message)
         server.quit()
     except Exception as e:
-        print("Email sending error:", e)  # Prevent crash
+        print("Error sending email:", e)
 
 # ===== 5️⃣ Database helpers =====
 def get_db():
@@ -65,6 +65,22 @@ def init_db():
                 email TEXT UNIQUE NOT NULL,
                 phone TEXT,
                 password BLOB NOT NULL
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                user_name TEXT,
+                customer_name TEXT,
+                email TEXT,
+                phone TEXT,
+                address TEXT,
+                payment_method TEXT,
+                items TEXT,
+                total REAL,
+                date TEXT,
+                FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
         cur.execute("""
@@ -91,45 +107,21 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
-# ===== Routes =====
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if session.get("user_name") != "Admin":
+            flash("Access denied!", "danger")
+            return redirect(url_for("home"))
+        return f(*args, **kwargs)
+    return decorated
+
+# ===== 6️⃣ Routes =====
+
+# Make login the first page
 @app.route("/")
-def index():
+def home():
     return redirect(url_for("login"))
-
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        email = request.form.get("email", "").strip().lower()
-        phone = request.form.get("phone", "").strip()
-        password = request.form.get("password", "")
-
-        if not name or not email or not password:
-            flash("Please fill all required fields.", "danger")
-            return redirect(url_for("register"))
-
-        hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-
-        try:
-            with get_db() as con:
-                cur = con.cursor()
-                cur.execute(
-                    "INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)",
-                    (name, email, phone, hashed_pw),
-                )
-                con.commit()
-            flash("Registration successful! Please login.", "success")
-            return redirect(url_for("login"))
-        except sqlite3.IntegrityError:
-            flash("Email already exists. Try logging in.", "danger")
-            return redirect(url_for("register"))
-        except Exception as e:
-            flash("Error during registration.", "danger")
-            print("DB Error:", e)
-            return redirect(url_for("register"))
-
-    return render_template("register.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -142,35 +134,32 @@ def login():
 
         with get_db() as con:
             cur = con.cursor()
-            cur.execute("SELECT id, name, password FROM users WHERE email=?", (email,))
+            cur.execute("SELECT id, name, email, phone, password FROM users WHERE email=?", (email,))
             user = cur.fetchone()
 
         if user:
-            try:
-                if bcrypt.checkpw(password.encode("utf-8"), user["password"]):
-                    session["user_id"] = user["id"]
-                    session["user_name"] = user["name"]
+            stored_pw = user["password"]
+            if bcrypt.checkpw(password.encode("utf-8"), stored_pw):
+                session["user_id"] = user["id"]
+                session["user_name"] = user["name"]
 
-                    # Log login
-                    try:
-                        with get_db() as con:
-                            cur = con.cursor()
-                            cur.execute("""
-                                INSERT INTO login_log (user_id, user_name, email, login_time)
-                                VALUES (?, ?, ?, ?)
-                            """, (user["id"], user["name"], email, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-                            con.commit()
-                    except Exception as e:
-                        print("Login log error:", e)
+                with get_db() as con:
+                    cur = con.cursor()
+                    cur.execute("""
+                        INSERT INTO login_log (user_id, user_name, email, login_time)
+                        VALUES (?, ?, ?, ?)
+                    """, (
+                        user["id"],
+                        user["name"],
+                        user["email"],
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    ))
+                    con.commit()
 
-                    flash("Login successful!", "success")
-                    return redirect(url_for("home"))
-            except Exception:
-                flash("Authentication error. Try again.", "danger")
-                return redirect(url_for("login"))
+                flash("Login successful!", "success")
+                return redirect(url_for("dashboard"))
 
         flash("Invalid email or password.", "danger")
-
     return render_template("login.html")
 
 @app.route("/logout")
@@ -179,32 +168,29 @@ def logout():
     flash("Logged out successfully!", "info")
     return redirect(url_for("login"))
 
-# ===== Password reset =====
+# ===== Dashboard after login =====
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    return render_template("dashboard.html")  # Create a dashboard.html template
+
+# ===== Password reset routes =====
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
-        try:
-            with get_db() as con:
-                cur = con.cursor()
-                cur.execute("SELECT id, name FROM users WHERE email=?", (email,))
-                user = cur.fetchone()
+        with get_db() as con:
+            cur = con.cursor()
+            cur.execute("SELECT id, name FROM users WHERE email=?", (email,))
+            user = cur.fetchone()
 
-            if user:
-                token = s.dumps(email, salt='password-reset-salt')
-                reset_link = url_for('reset_password', token=token, _external=True)
-                try:
-                    send_reset_email(email, reset_link, user["name"])
-                except Exception as e:
-                    print("Email send failed:", e)
+        if user:
+            token = s.dumps(email, salt='password-reset-salt')
+            reset_link = url_for('reset_password', token=token, _external=True)
+            send_reset_email(email, reset_link, user["name"])
 
-            flash('If your email exists, a password reset link has been sent.', 'info')
-            return redirect(url_for('login'))
-        except Exception as e:
-            flash("Error processing password reset.", "danger")
-            print("Password reset error:", e)
-            return redirect(url_for('forgot_password'))
-
+        flash('If your email exists in our system, a password reset link has been sent.', 'info')
+        return redirect(url_for('login'))
     return render_template('forgot_password.html')
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
@@ -212,29 +198,20 @@ def reset_password(token):
     try:
         email = s.loads(token, salt='password-reset-salt', max_age=1800)
     except Exception:
-        flash('The password reset link is invalid or expired.', 'danger')
-        return redirect(url_for('login'))  # ✅ Go to login page
+        flash('The password reset link is invalid or has expired.', 'danger')
+        return redirect(url_for('forgot_password'))
 
     if request.method == 'POST':
         password = request.form['password']
         hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        try:
-            with get_db() as con:
-                cur = con.cursor()
-                cur.execute("UPDATE users SET password=? WHERE email=?", (hashed_pw, email))
-                con.commit()
-            flash('Your password has been reset successfully!', 'success')
-            return redirect(url_for('login'))
-        except Exception as e:
-            flash('Error resetting password.', 'danger')
-            print("Reset DB error:", e)
-            return redirect(url_for('login'))
-
+        with get_db() as con:
+            cur = con.cursor()
+            cur.execute("UPDATE users SET password=? WHERE email=?", (hashed_pw, email))
+            con.commit()
+        flash('Your password has been reset successfully!', 'success')
+        return redirect(url_for('login'))
     return render_template('reset_password.html')
 
 # ===== Run app =====
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
-
-
-

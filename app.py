@@ -92,7 +92,7 @@ def login_required(f):
     return decorated
 
 # ===== Routes =====
- @app.route("/")
+@app.route("/")
 def index():
     return redirect(url_for("login"))
 
@@ -235,5 +235,6 @@ def reset_password(token):
 # ===== Run app =====
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+
 
 

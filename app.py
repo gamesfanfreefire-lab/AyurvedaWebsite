@@ -92,7 +92,10 @@ def login_required(f):
     return decorated
 
 # ===== Routes =====
- 
+ @app.route("/")
+def index():
+    return redirect(url_for("login"))
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -232,4 +235,5 @@ def reset_password(token):
 # ===== Run app =====
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+
 

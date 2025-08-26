@@ -231,9 +231,12 @@ def forgot_password():
             token = s.dumps(email, salt='password-reset-salt')
             reset_link = url_for('reset_password', token=token, _external=True)
 
-            msg = Message('Password Reset Request', recipients=[email])
-            msg.body = f'Hello {user["name"]},\n\nClick the link below to reset your password:\n{reset_link}\n\nThis link will expire in 30 minutes.'
-            mail.send(msg)
+            # Using EmailMessage
+msg = EmailMessage(subject='Password Reset Request',
+                   body=f'Hello {user.name},\nClick the link: {reset_link}',
+                   to=[email])
+msg.send()
+
 
         flash('If your email exists in our system, a password reset link has been sent.', 'info')
         return redirect(url_for('login'))
@@ -267,4 +270,5 @@ def reset_password(token):
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+
 

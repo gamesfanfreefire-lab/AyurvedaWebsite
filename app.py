@@ -8,21 +8,21 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from itsdangerous import URLSafeTimedSerializer
 
-# ===== 1️⃣ Create Flask app first =====
+# ===== 1️⃣ Create Flask app =====
 app = Flask(__name__)
-app.secret_key = "your_secret_key"  # TODO: replace with a strong random value
+app.secret_key = "your_secret_key"  # Replace with a strong random value
 
 # ===== 2️⃣ Database paths =====
 DATABASE_PATH = os.path.join(app.root_path, "database.db")
 ORDERS_FILE = os.path.join(app.root_path, "orders.json")
 
-# ===== 3️⃣ Token serializer for password reset =====
+# ===== 3️⃣ Token serializer =====
 s = URLSafeTimedSerializer(app.secret_key)
 
-# ===== 4️⃣ Email helper using smtplib =====
+# ===== 4️⃣ Email helper =====
 def send_reset_email(to_email, reset_link, user_name):
     sender_email = "your_email@gmail.com"
-    sender_password = "your_app_password"  # Use Gmail App Password if 2FA is enabled
+    sender_password = "your_app_password"
 
     message = MIMEMultipart()
     message["From"] = sender_email
@@ -46,7 +46,7 @@ This link will expire in 30 minutes.
         server.send_message(message)
         server.quit()
     except Exception as e:
-        print("Error sending email:", e)
+        print("Email sending error:", e)  # Prevent crash
 
 # ===== 5️⃣ Database helpers =====
 def get_db():
@@ -68,22 +68,6 @@ def init_db():
             )
         """)
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS orders (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                user_name TEXT,
-                customer_name TEXT,
-                email TEXT,
-                phone TEXT,
-                address TEXT,
-                payment_method TEXT,
-                items TEXT,
-                total REAL,
-                date TEXT,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            )
-        """)
-        cur.execute("""
             CREATE TABLE IF NOT EXISTS login_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER,
@@ -98,33 +82,6 @@ def init_db():
 # Initialize DB
 init_db()
 
-# ===== File helpers =====
-def load_orders():
-    if not os.path.exists(ORDERS_FILE):
-        return []
-    try:
-        with open(ORDERS_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return data if isinstance(data, list) else []
-    except Exception:
-        return []
-
-def save_orders(orders):
-    os.makedirs(os.path.dirname(ORDERS_FILE), exist_ok=True)
-    with open(ORDERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(orders, f, ensure_ascii=False, indent=2)
-
-# ===== Sample products =====
-products = [
-    {"name": "Herbal Face Cream", "description": "Natural ingredients for glowing skin", "price": 250, "image": "images/herbalfacecream.jpg"},
-    {"name": "Aloe Vera Gel", "description": "Soothes and hydrates the skin", "price": 180, "image": "images/aleovera.jpg"},
-    {"name": "Ghar Soap", "description": "Pure herbal bathing soap", "price": 70,  "image": "images/gharsoap.jpg"},
-    {"name": "Lotus Powder", "description": "Skin brightening herbal powder", "price": 120, "image": "images/lotus.jpg"},
-    {"name": "Ayur Herbal Shampoo", "description": "Gentle cleansing for hair", "price": 300, "image": "images/ayurherbal.jpg"},
-    {"name": "Aloe Allen Juice", "description": "Detoxifying aloe vera juice", "price": 200, "image": "images/aloeallen.jpg"},
-    {"name": "Eladi Oil", "description": "Traditional ayurvedic oil for skin", "price": 400, "image": "images/eladi.jpg"},
-]
-
 # ===== Decorators =====
 def login_required(f):
     @wraps(f)
@@ -134,19 +91,10 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
-def admin_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if session.get("user_name") != "Admin":
-            flash("Access denied!", "danger")
-            return redirect(url_for("home"))
-        return f(*args, **kwargs)
-    return decorated
-
-# ===== Auth routes =====
+# ===== Routes =====
 @app.route("/")
 def home():
-    return redirect(url_for("login"))  # Redirect to login page directly
+    return "Welcome to Ayurveda Store!"
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -175,6 +123,10 @@ def register():
         except sqlite3.IntegrityError:
             flash("Email already exists. Try logging in.", "danger")
             return redirect(url_for("register"))
+        except Exception as e:
+            flash("Error during registration.", "danger")
+            print("DB Error:", e)
+            return redirect(url_for("register"))
 
     return render_template("register.html")
 
@@ -189,33 +141,31 @@ def login():
 
         with get_db() as con:
             cur = con.cursor()
-            cur.execute("SELECT id, name, email, phone, password FROM users WHERE email=?", (email,))
+            cur.execute("SELECT id, name, password FROM users WHERE email=?", (email,))
             user = cur.fetchone()
 
         if user:
-            stored_pw = user["password"]
             try:
-                if bcrypt.checkpw(password.encode("utf-8"), stored_pw):
+                if bcrypt.checkpw(password.encode("utf-8"), user["password"]):
                     session["user_id"] = user["id"]
                     session["user_name"] = user["name"]
 
-                    with get_db() as con:
-                        cur = con.cursor()
-                        cur.execute("""
-                            INSERT INTO login_log (user_id, user_name, email, login_time)
-                            VALUES (?, ?, ?, ?)
-                        """, (
-                            user["id"],
-                            user["name"],
-                            user["email"],
-                            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        ))
-                        con.commit()
+                    # Log login
+                    try:
+                        with get_db() as con:
+                            cur = con.cursor()
+                            cur.execute("""
+                                INSERT INTO login_log (user_id, user_name, email, login_time)
+                                VALUES (?, ?, ?, ?)
+                            """, (user["id"], user["name"], email, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                            con.commit()
+                    except Exception as e:
+                        print("Login log error:", e)
 
                     flash("Login successful!", "success")
                     return redirect(url_for("home"))
             except Exception:
-                flash("Authentication error. Please try again.", "danger")
+                flash("Authentication error. Try again.", "danger")
                 return redirect(url_for("login"))
 
         flash("Invalid email or password.", "danger")
@@ -228,24 +178,31 @@ def logout():
     flash("Logged out successfully!", "info")
     return redirect(url_for("login"))
 
-# ===== Password reset routes =====
+# ===== Password reset =====
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
         email = request.form['email'].strip().lower()
+        try:
+            with get_db() as con:
+                cur = con.cursor()
+                cur.execute("SELECT id, name FROM users WHERE email=?", (email,))
+                user = cur.fetchone()
 
-        with get_db() as con:
-            cur = con.cursor()
-            cur.execute("SELECT id, name FROM users WHERE email=?", (email,))
-            user = cur.fetchone()
+            if user:
+                token = s.dumps(email, salt='password-reset-salt')
+                reset_link = url_for('reset_password', token=token, _external=True)
+                try:
+                    send_reset_email(email, reset_link, user["name"])
+                except Exception as e:
+                    print("Email send failed:", e)
 
-        if user:
-            token = s.dumps(email, salt='password-reset-salt')
-            reset_link = url_for('reset_password', token=token, _external=True)
-            send_reset_email(email, reset_link, user["name"])
-
-        flash('If your email exists in our system, a password reset link has been sent.', 'info')
-        return redirect(url_for('login'))
+            flash('If your email exists, a password reset link has been sent.', 'info')
+            return redirect(url_for('login'))
+        except Exception as e:
+            flash("Error processing password reset.", "danger")
+            print("Password reset error:", e)
+            return redirect(url_for('forgot_password'))
 
     return render_template('forgot_password.html')
 
@@ -254,23 +211,26 @@ def reset_password(token):
     try:
         email = s.loads(token, salt='password-reset-salt', max_age=1800)
     except Exception:
-        flash('The password reset link is invalid or has expired.', 'danger')
-        return redirect(url_for('login'))
+        flash('The password reset link is invalid or expired.', 'danger')
+        return redirect(url_for('login'))  # ✅ Go to login page
 
     if request.method == 'POST':
         password = request.form['password']
         hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-        with get_db() as con:
-            cur = con.cursor()
-            cur.execute("UPDATE users SET password=? WHERE email=?", (hashed_pw, email))
-            con.commit()
-
-        flash('Your password has been reset successfully!', 'success')
-        return redirect(url_for('login'))
+        try:
+            with get_db() as con:
+                cur = con.cursor()
+                cur.execute("UPDATE users SET password=? WHERE email=?", (hashed_pw, email))
+                con.commit()
+            flash('Your password has been reset successfully!', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            flash('Error resetting password.', 'danger')
+            print("Reset DB error:", e)
+            return redirect(url_for('login'))
 
     return render_template('reset_password.html')
 
-# ===== Main app runner =====
+# ===== Run app =====
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

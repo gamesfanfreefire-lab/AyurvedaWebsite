@@ -148,6 +148,10 @@ def admin_required(f):
     return decorated
 
 # ===== Auth routes =====
+@app.route("/")
+def home():
+    return "Welcome to Ayurveda Store!"
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -274,3 +278,4 @@ def reset_password(token):
 # ===== Main app runner =====
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+

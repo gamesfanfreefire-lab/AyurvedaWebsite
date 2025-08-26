@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Login History - Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+        h2 { text-align: center; color: #4CAF50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #4CAF50; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .back-btn:hover { background: #45a049; }
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            tr { margin-bottom: 10px; }
+            th { display: none; }
+            td { text-align: right; position: relative; padding-left: 50%; }
+            td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                text-align: left;
+                font-weight: bold;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>All Login History</h2>
+    <a href="{{ url_for('admin_dashboard') }}" class="back-btn">⬅ Back to Dashboard</a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>User Name</th>
+                <th>Email</th>
+                <th>Login Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for login in all_logins %}
+            <tr>
+                <td data-label="User Name">{{ login['user_name'] }}</td>
+                <td data-label="Email">{{ login['email'] }}</td>
+                <td data-label="Login Time">{{ login['login_time'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

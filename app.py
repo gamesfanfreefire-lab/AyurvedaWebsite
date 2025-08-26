@@ -3,7 +3,7 @@ from functools import wraps
 import sqlite3, bcrypt
 import json, os
 from datetime import datetime
-from mailman.flask import Mail, EmailMessage
+from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer  # added for password reset
 
 app = Flask(__name__)
@@ -232,10 +232,13 @@ def forgot_password():
             reset_link = url_for('reset_password', token=token, _external=True)
 
             # Using EmailMessage
-msg = EmailMessage(subject='Password Reset Request',
-                   body=f'Hello {user.name},\nClick the link: {reset_link}',
-                   to=[email])
+msg = EmailMessage(
+    subject="Password Reset Request",
+    body=f"Hello {user.name},\n\nClick the link: {reset_link}\n\nThis link expires in 30 minutes.",
+    to=[email]
+)
 msg.send()
+
 
 
         flash('If your email exists in our system, a password reset link has been sent.', 'info')
@@ -270,5 +273,6 @@ def reset_password(token):
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+
 
 

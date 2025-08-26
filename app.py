@@ -3,7 +3,7 @@ from functools import wraps
 import sqlite3, bcrypt
 import json, os
 from datetime import datetime
-from flask_mail import Mail, Message
+from mailman.flask import Mail, EmailMessage
 from itsdangerous import URLSafeTimedSerializer  # added for password reset
 
 app = Flask(__name__)
@@ -267,3 +267,4 @@ def reset_password(token):
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+

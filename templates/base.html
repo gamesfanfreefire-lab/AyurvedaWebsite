@@ -198,22 +198,9 @@
   </header>
 
   <main>
-    {% block content %}
-    <nav style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#4CAF50;">
-    <a href="/" style="display:flex;align-items:center;text-decoration:none;color:white;">
-        <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="Logo" style="height:50px;margin-right:10px;">
-        <span style="font-size:20px;font-weight:bold;">Your Site Name</span>
-    </a>
-    <ul style="list-style:none;display:flex;gap:15px;">
-        <li><a href="/" style="color:white;text-decoration:none;">Home</a></li>
-        <li><a href="/about" style="color:white;text-decoration:none;">About</a></li>
-        <li><a href="/contact" style="color:white;text-decoration:none;">Contact</a></li>
-    </ul>
-</nav>
-
-    {% endblock %}
+    {% block content %}{% endblock %}
   </main>
-
+ 
   <script>
     function toggleMenu() {
       const navLinks = document.querySelector('.nav-links');
@@ -224,5 +211,6 @@
   </script>
 </body>
 </html>
+
 
 

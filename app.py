@@ -112,21 +112,47 @@ def admin_required(f):
     def decorated(*args, **kwargs):
         if session.get("user_name") != "Admin":
             flash("Access denied!", "danger")
-            return redirect(url_for("home"))
+            return redirect(url_for("dashboard"))
         return f(*args, **kwargs)
     return decorated
 
 # ===== 6️⃣ Routes =====
 
-# Make login the first page
+# Default route → Login page
 @app.route("/")
 def home():
     return redirect(url_for("login"))
 
+# ✅ Register Page
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        name = request.form["name"].strip()
+        email = request.form["email"].strip().lower()
+        phone = request.form["phone"].strip()
+        password = request.form["password"]
+
+        hashed_pw = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+
+        try:
+            with get_db() as con:
+                cur = con.cursor()
+                cur.execute("""
+                    INSERT INTO users (name, email, phone, password)
+                    VALUES (?, ?, ?, ?)
+                """, (name, email, phone, hashed_pw))
+                con.commit()
+            flash("Registration successful! Please log in.", "success")
+            return redirect(url_for("login"))
+        except sqlite3.IntegrityError:
+            flash("Email already exists!", "danger")
+    return render_template("register.html")
+
+# ✅ Login Page
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("user_id"):
-        return redirect(url_for("home"))
+        return redirect(url_for("dashboard"))
 
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
@@ -168,13 +194,61 @@ def logout():
     flash("Logged out successfully!", "info")
     return redirect(url_for("login"))
 
-# ===== Dashboard after login =====
+# ✅ Dashboard
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")  # Create a dashboard.html template
+    return render_template("dashboard.html")
 
-# ===== Password reset routes =====
+# ✅ Products Page
+@app.route("/products")
+@login_required
+def products_page():
+    return render_template("products.html")
+
+# ✅ Place Order
+@app.route("/place-order", methods=["POST"])
+@login_required
+def place_order():
+    data = request.form
+    order = {
+        "user_id": session["user_id"],
+        "user_name": session["user_name"],
+        "customer_name": data.get("customer_name"),
+        "email": data.get("email"),
+        "phone": data.get("phone"),
+        "address": data.get("address"),
+        "payment_method": data.get("payment_method"),
+        "items": data.get("items"),
+        "total": data.get("total"),
+        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+    with get_db() as con:
+        cur = con.cursor()
+        cur.execute("""
+            INSERT INTO orders (user_id, user_name, customer_name, email, phone, address, payment_method, items, total, date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            order["user_id"], order["user_name"], order["customer_name"], order["email"], order["phone"],
+            order["address"], order["payment_method"], order["items"], order["total"], order["date"]
+        ))
+        con.commit()
+
+    flash("Order placed successfully!", "success")
+    return redirect(url_for("order_history"))
+
+# ✅ Order History
+@app.route("/order-history")
+@login_required
+def order_history():
+    with get_db() as con:
+        cur = con.cursor()
+        cur.execute("SELECT * FROM orders WHERE user_id=?", (session["user_id"],))
+        orders = cur.fetchall()
+    return render_template("order_history.html", orders=orders)
+
+# ✅ Forgot Password
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -211,6 +285,16 @@ def reset_password(token):
         flash('Your password has been reset successfully!', 'success')
         return redirect(url_for('login'))
     return render_template('reset_password.html')
+
+# ✅ Admin Dashboard (optional)
+@app.route("/admin")
+@admin_required
+def admin_dashboard():
+    with get_db() as con:
+        cur = con.cursor()
+        cur.execute("SELECT * FROM orders")
+        orders = cur.fetchall()
+    return render_template("admin_dashboard.html", orders=orders)
 
 # ===== Run app =====
 if __name__ == "__main__":

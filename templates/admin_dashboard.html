@@ -61,13 +61,14 @@
         <th>Email</th>
         <th>Login Time</th>
     </tr>
-    {% for login in login_history %}
-    <tr>
-        <td>{{ login[0] }}</td>
-        <td>{{ login[1] }}</td>
-        <td>{{ login[2] }}</td>
-    </tr>
-    {% endfor %}
+   {% for login in recent_logins %}
+<tr>
+    <td>{{ login['user_name'] }}</td>
+    <td>{{ login['email'] }}</td>
+    <td>{{ login['login_time'] }}</td>
+</tr>
+{% endfor %}
+
 </table>
 
 <form method="POST" action="{{ url_for('admin_clear_orders') }}" onsubmit="return confirm('Are you sure you want to clear all orders?');" style="margin-bottom:15px;">
@@ -89,3 +90,4 @@
 </script>
 
 {% endblock %}
+

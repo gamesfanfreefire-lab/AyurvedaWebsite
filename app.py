@@ -39,7 +39,6 @@ This link will expire in 30 minutes.
 """
     message.attach(MIMEText(body, "plain"))
 
-    # Connect to Gmail SMTP server
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
@@ -59,7 +58,6 @@ def get_db():
 def init_db():
     with get_db() as con:
         cur = con.cursor()
-        # users table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,7 +67,6 @@ def init_db():
                 password BLOB NOT NULL
             )
         """)
-        # orders table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS orders (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -86,7 +83,6 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
-        # login_log table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS login_log (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -150,7 +146,7 @@ def admin_required(f):
 # ===== Auth routes =====
 @app.route("/")
 def home():
-    return "Welcome to Ayurveda Store!"
+    return redirect(url_for("login"))  # Redirect to login page directly
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -259,7 +255,7 @@ def reset_password(token):
         email = s.loads(token, salt='password-reset-salt', max_age=1800)
     except Exception:
         flash('The password reset link is invalid or has expired.', 'danger')
-        return redirect(url_for('forgot_password'))
+        return redirect(url_for('login'))
 
     if request.method == 'POST':
         password = request.form['password']
@@ -278,4 +274,3 @@ def reset_password(token):
 # ===== Main app runner =====
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
-

@@ -55,22 +55,7 @@
     </tbody>
 </table>
 </div>
-<h3 style="margin-top:30px;">Recent Logins</h3>
-<table border="1" cellpadding="8" cellspacing="0">
-    <tr>
-        <th>User Name</th>
-        <th>Email</th>
-        <th>Login Time</th>
-    </tr>
-   {% for login in recent_logins %}
-<tr>
-    <td>{{ login['user_name'] }}</td>
-    <td>{{ login['email'] }}</td>
-    <td>{{ login['login_time'] }}</td>
-</tr>
-{% endfor %}
-
-</table>
+ 
 
 <form method="POST" action="{{ url_for('admin_clear_orders') }}" onsubmit="return confirm('Are you sure you want to clear all orders?');" style="margin-bottom:15px;">
     <button type="submit" style="padding:10px 20px; background:#f44336; color:#fff; border:none; border-radius:5px; cursor:pointer;">
@@ -91,5 +76,6 @@
 </script>
 
 {% endblock %}
+
 
 

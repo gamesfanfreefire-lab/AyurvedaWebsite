@@ -197,14 +197,7 @@
       </ul>
     </nav>
 
-    <!-- Flash messages -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div class="flash-message">
-          {% for msg in messages %}<p>{{ msg }}</p>{% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+     
   </header>
 
   <main>
@@ -222,3 +215,4 @@
   </script>
 </body>
 </html>
+

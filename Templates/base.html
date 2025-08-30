@@ -65,19 +65,25 @@
 
       <!-- Navigation Links -->
       <ul class="nav-links">
-        <li class="nav-item"><a href="{{ url_for('home') }}" class="nav-link">Home</a></li>
-        <li class="nav-item"><a href="{{ url_for('products_page') }}" class="nav-link">Products</a></li>
-        <li class="nav-item"><a href="{{ url_for('contact') }}" class="nav-link">Contact</a></li>
-        <li class="nav-item"><a href="{{ url_for('cart') }}" class="nav-link">🛒 Cart ({{ session.get('cart', [])|length }})</a></li>
+    <li class="nav-item"><a href="{{ url_for('home') }}" class="nav-link">Home</a></li>
+    <li class="nav-item"><a href="{{ url_for('products_page') }}" class="nav-link">Products</a></li>
+    <li class="nav-item"><a href="{{ url_for('contact') }}" class="nav-link">Contact</a></li>
+    <li class="nav-item"><a href="{{ url_for('cart') }}" class="nav-link">🛒 Cart ({{ session.get('cart', [])|length }})</a></li>
 
-        {% if session.get('user_id') %}
-          <li class="nav-item"><span class="nav-link">Welcome, {{ session['user_name'] }}</span></li>
-          <li class="nav-item"><a href="{{ url_for('logout') }}" class="nav-link">Logout</a></li>
-        {% else %}
-          <li class="nav-item"><a href="{{ url_for('login') }}" class="nav-link">Login</a></li>
-          <li class="nav-item"><a href="{{ url_for('register') }}" class="nav-link">Register</a></li>
-        {% endif %}
-      </ul>
+    {% if session.get('user_id') %}
+      <li class="nav-item"><span class="nav-link">Welcome, {{ session.get('user_name', 'User') }}</span></li>
+      <li class="nav-item"><a href="{{ url_for('logout') }}" class="nav-link">Logout</a></li>
+
+      {% if session.get('user_name') == 'Admin' %}
+        <li class="nav-item"><a href="{{ url_for('admin_dashboard') }}" class="nav-link">Dashboard</a></li>
+      {% endif %}
+
+    {% else %}
+      <li class="nav-item"><a href="{{ url_for('login') }}" class="nav-link">Login</a></li>
+      <li class="nav-item"><a href="{{ url_for('register') }}" class="nav-link">Register</a></li>
+    {% endif %}
+</ul>
+
 
       
 
@@ -102,3 +108,4 @@
   </script>
 </body>
 </html>
+

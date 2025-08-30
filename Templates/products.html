@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Products - Ayurveda Store{% endblock %}
+
+{% block content %}
+<h2 style="text-align:center; margin-bottom:20px; font-size:28px; color:#2e7d32; animation: fadeInDown 1s;">
+  🌿 Our Products 🌿
+</h2>
+
+<style>
+/* ---------- Animations ---------- */
+@keyframes fadeIn {
+  from {opacity:0; transform: translateY(20px);}
+  to {opacity:1; transform: translateY(0);}
+}
+@keyframes fadeInDown {
+  from {opacity:0; transform: translateY(-20px);}
+  to {opacity:1; transform: translateY(0);}
+}
+@keyframes glow {
+  0% {box-shadow:0 0 5px #4caf50;}
+  50% {box-shadow:0 0 20px #81c784;}
+  100% {box-shadow:0 0 5px #4caf50;}
+}
+
+/* ---------- Product Grid ---------- */
+.product-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 20px;
+}
+.product-card {
+  width: 230px;
+  border-radius: 16px;
+  padding: 15px;
+  text-align: center;
+  background: #fff;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeIn 0.8s ease;
+  position: relative;
+  overflow: hidden;
+}
+.product-card:hover {
+  transform: translateY(-10px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+}
+.product-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  transition: transform 0.4s ease;
+}
+.product-card:hover img {
+  transform: scale(1.08);
+}
+.product-card h3 {
+  font-size: 18px;
+  margin: 12px 0 5px;
+  color: #2e7d32;
+}
+.product-card p {
+  font-size: 14px;
+  color: #555;
+  margin: 5px 0;
+}
+.price {
+  font-weight: bold;
+  color: #388e3c;
+  display: block;
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+/* ---------- Buttons ---------- */
+/* ✅ Common Button Styling */
+.button-group button,
+.add-to-cart,
+.buy-now {
+    display: inline-block;
+    padding: 12px 28px; /* Bigger size */
+    border-radius: 50px; /* Oval shape */
+    font-size: 16px; /* Slightly larger text */
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+/* ✅ Add to Cart (Green) */
+.add-to-cart {
+    background: #28a745; /* Green */
+    color: white;
+}
+
+.add-to-cart:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+/* ✅ Buy Now (Orange) */
+.buy-now {
+    background: #ff5722; /* Orange */
+    color: white;
+}
+
+.buy-now:hover {
+    background: #e64a19;
+    transform: scale(1.05);
+}
+
+/* ✅ Space between buttons */
+.button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    justify-content: center;
+}
+
+
+/* ---------- Search Bar ---------- */
+.search-form {
+  margin: 20px auto;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  animation: fadeInDown 1s;
+}
+.search-form input {
+  padding: 10px;
+  width: 260px;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  outline: none;
+  transition: border 0.3s;
+}
+.search-form input:focus {
+  border: 1px solid #4CAF50;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
+.search-form button {
+  padding: 10px 15px;
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+.search-form button:hover {
+  background: #2e7d32;
+  transform: scale(1.05);
+}
+
+/* ---------- Back Button ---------- */
+.back-button {
+  margin: 15px 0;
+  text-align: center;
+}
+.back-button a {
+  text-decoration: none;
+  background: #2196F3;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 25px;
+  transition: 0.3s;
+}
+.back-button a:hover {
+  background: #1565c0;
+  transform: scale(1.05);
+}
+
+/* ---------- Empty State ---------- */
+.empty {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 16px;
+  color: #e53935;
+  animation: fadeIn 1s;
+}
+.quantity-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* space between buttons and input */
+}
+
+.qty-input {
+    width: 60px;       /* adjust size */
+    height: 40px;
+    text-align: center; /* ✅ center the number horizontally */
+    font-size: 18px;    /* bigger number */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.qty-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    font-weight: bold;
+    border: none;
+    background: #fafefb; /* green background */
+    color: rgb(1, 25, 1);
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.qty-btn:hover {
+    background: #218838; /* darker green on hover */
+}
+
+</style>
+
+<!-- Search Bar -->
+<form action="{{ url_for('search') }}" method="GET" class="search-form">
+  <input type="text" name="query" placeholder="🔍 Search products..." />
+  <button type="submit">Search</button>
+</form>
+
+<!-- Back Button (only when searching) -->
+{% if request.args.get('query') %}
+  <div class="back-button">
+    <a href="{{ url_for('products_page') }}">⬅ Back to All Products</a>
+  </div>
+{% endif %}
+
+<!-- Empty state -->
+{% if products|length == 0 %}
+  <p class="empty">❌ No products found for “{{ request.args.get('query','') }}”.</p>
+{% endif %}
+
+<!-- Products -->
+<div class="product-container">
+    {% for product in products %}
+    <div class="product-card">
+        <img src="{{ url_for('static', filename=product['image']) }}" alt="{{ product['name'] }}">
+        <h3>{{ product['name'] }}</h3>
+        <p>{{ product['description'] }}</p>
+        <span class="price">₹{{ product['price'] }}</span>
+
+        <!-- Quantity Input -->
+        <div class="quantity-wrapper">
+            <button type="button" class="qty-btn" onclick="decreaseQty(this)">-</button>
+            <input type="number" value="1" min="1" class="qty-input">
+            <button type="button" class="qty-btn" onclick="increaseQty(this)">+</button>
+        </div>
+
+        <!-- ✅ Button Group -->
+        <div class="button-group">
+            <!-- Add to Cart -->
+            <form action="{{ url_for('add_to_cart', product_name=product['name']) }}" method="POST" style="display:inline;">
+                <input type="hidden" name="quantity" class="qty-input-hidden" value="1">
+                <button type="submit" class="add-to-cart">🛒 Cart</button>
+            </form>
+
+            <!-- Buy Now -->
+            <form action="{{ url_for('buy_now') }}" method="POST" style="display:inline;">
+                <input type="hidden" name="product_name" value="{{ product['name'] }}">
+                <input type="hidden" name="quantity" class="qty-input-hidden" value="1">
+                <button type="submit" class="buy-now">⚡ Buy</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+<script>
+function increaseQty(button) {
+    const wrapper = button.parentElement;
+    const input = wrapper.querySelector('.qty-input');
+    input.value = parseInt(input.value || 0) + 1;
+    updateHiddenQty(button);
+}
+
+function decreaseQty(button) {
+    const wrapper = button.parentElement;
+    const input = wrapper.querySelector('.qty-input');
+    let val = parseInt(input.value || 0);
+    if (val > 1) val--;
+    input.value = val;
+    updateHiddenQty(button);
+}
+
+function updateHiddenQty(button) {
+    const card = button.closest('.product-card');
+    const qty = card.querySelector('.qty-input').value;
+    const hiddenInputs = card.querySelectorAll('.qty-input-hidden');
+    hiddenInputs.forEach(hidden => hidden.value = qty);
+}
+
+// ✅ Sync on form submit (safety)
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function() {
+        const card = form.closest('.product-card');
+        if (card) {
+            const qty = card.querySelector('.qty-input').value;
+            const hidden = form.querySelector('.qty-input-hidden');
+            if (hidden) hidden.value = qty;
+        }
+    });
+});
+</script>
+
+
+
+
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h2>Admin Dashboard</h2>
+
+<style>
+    .animated-btn {
+    display: inline-block;
+    padding: 12px 25px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+.animated-btn:hover {
+    background: linear-gradient(45deg, #0056b3, #003f8a);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+
+
+</style>
+
+<div style="display:flex; gap:20px; flex-wrap:wrap;">
+    <div style="flex:1; background:#4CAF50; color:#fff; padding:20px; border-radius:10px;">
+        <h3>Total Orders</h3>
+        <p style="font-size:24px;">{{ total_orders }}</p>
+    </div>
+    <div style="flex:1; background:#2196F3; color:#fff; padding:20px; border-radius:10px;">
+        <h3>Total Revenue</h3>
+        <p style="font-size:24px;">₹{{ total_revenue }}</p>
+    </div>
+</div>
+
+
+<div style="max-width: 400px; margin: 20px auto; padding: 20px; text-align: center; background: #fff; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+    <h3 style="margin-bottom: 15px; font-size: 20px; color: #333;">Admin Tools</h3>
+    <a href="{{ url_for('admin_recent_logins') }}" class="animated-btn">View Recent Logins</a>
+    <a href="{{ url_for('view_messages') }}" class="animated-btn" style="margin: 10px;">View Messages</a>
+    
+
+</div>
+
+
+<h2>Recent Orders</h2>
+<table border="1" cellpadding="10" style="width: 100%; border-collapse: collapse;">
+    <tr>
+        <th>Customer Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Address</th>
+        <th>Total</th>
+        <th>Date</th>
+    </tr>
+    {% for order in recent_orders %}
+    <tr>
+        <td>{{ order[0] }}</td>
+        <td>{{ order[1] }}</td>
+        <td>{{ order[2] }}</td>
+        <td>{{ order[3] }}</td>
+        <td>₹{{ order[4] }}</td>
+        <td>{{ order[5] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+</div>
+
+
+<form method="POST" action="{{ url_for('admin_clear_orders') }}" onsubmit="return confirm('Are you sure you want to clear all orders?');" style="margin-bottom:15px;">
+    <button type="submit" style="padding:10px 20px; background:#f44336; color:#fff; border:none; border-radius:5px; cursor:pointer;">
+        Clear All Orders
+    </button>
+</form>
+
+<script>
+    // Simple search/filter for orders table
+    document.getElementById('orderSearch').addEventListener('keyup', function() {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#ordersTable tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+</script>
+
+{% endblock %}

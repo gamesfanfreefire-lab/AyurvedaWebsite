@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recent Logins</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 0 10px #ccc;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #333;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f2f2f2;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .back-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <a href="{{ url_for('admin_dashboard') }}" class="back-btn">← Back to Dashboard</a>
+    <h1>Recent Logins</h1>
+    <table>
+        <tr>
+            <th>User Name</th>
+            <th>Email</th>
+            <th>Login Time</th>
+        </tr>
+        {% for login in recent_logins %}
+        <tr>
+            <td>{{ login[0] }}</td>
+            <td>{{ login[1] }}</td>
+            <td>{{ login[2] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

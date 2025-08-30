@@ -354,6 +354,7 @@ def login():
     # Ensure session keys used in template exist
     if "cart" not in session:
         session["cart"] = []
+    print("Session contents:", dict(session))
 
     return render_template("login.html")
 
@@ -825,5 +826,6 @@ def thanks():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
 
 

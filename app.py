@@ -310,39 +310,68 @@ def register():
 # ===== Login =====
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    # Redirect logged-in users
     if session.get("user_id"):
         return redirect(url_for("home"))
 
     if request.method == "POST":
+        # Safely get form values
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
 
-        con = get_db()
-        cur = con.cursor()
-        cur.execute("SELECT id, name, email, phone, password FROM users WHERE email=?", (email,))
-        user = cur.fetchone()
-        con.close()
+        if not email or not password:
+            flash("Please enter both email and password.", "warning")
+            return render_template("login.html")
 
-        if user and bcrypt.checkpw(password.encode("utf-8"), user[4]):
-            session["user_id"] = user[0]
-            session["user_name"] = user[1]
-
+        try:
             con = get_db()
             cur = con.cursor()
-            cur.execute("""
-                INSERT INTO login_log (user_id, user_name, email, login_time)
-                VALUES (?, ?, ?, ?)
-            """, (
-                user[0], user[1], user[2], datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            ))
-            con.commit()
+            cur.execute(
+                "SELECT id, name, email, phone, password FROM users WHERE email=?",
+                (email,)
+            )
+            user = cur.fetchone()
+        except Exception as e:
+            flash("Database error. Please try again.", "danger")
+            print("DB error:", e)
+            return render_template("login.html")
+        finally:
             con.close()
 
-            flash("Login successful!", "success")
-            return redirect(url_for("home"))
+        if user:
+            stored_hash = user[4]
+            # Ensure the stored password is bytes
+            if isinstance(stored_hash, str):
+                stored_hash = stored_hash.encode("utf-8")
+
+            if bcrypt.checkpw(password.encode("utf-8"), stored_hash):
+                # Successful login
+                session["user_id"] = user[0]
+                session["user_name"] = user[1]
+
+                try:
+                    con = get_db()
+                    cur = con.cursor()
+                    cur.execute("""
+                        INSERT INTO login_log (user_id, user_name, email, login_time)
+                        VALUES (?, ?, ?, ?)
+                    """, (
+                        user[0], user[1], user[2], datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    ))
+                    con.commit()
+                except Exception as e:
+                    print("Login log error:", e)
+                finally:
+                    con.close()
+
+                flash("Login successful!", "success")
+                return redirect(url_for("home"))
+            else:
+                flash("Invalid email or password.", "danger")
         else:
             flash("Invalid email or password.", "danger")
 
+    # GET request or failed POST
     return render_template("login.html")
 
 @app.route("/logout")
@@ -811,3 +840,4 @@ def thanks():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+

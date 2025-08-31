@@ -313,7 +313,7 @@ def login():
     # Redirect already logged-in users
     if session.get("user_id"):
         return redirect(url_for("home"))
- return render_template("login.html")
+        return render_template("login.html")
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
@@ -826,6 +826,7 @@ def thanks():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
 
 
 

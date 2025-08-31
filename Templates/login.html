@@ -3,20 +3,186 @@
 
 {% block content %}
 <style>
-/* --- your full CSS as before --- */
-body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 80vh;
-  font-family: 'Arial', sans-serif;
-  background: #e0f2f1;
-  overflow: hidden;
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    font-family: 'Arial', sans-serif;
+    background: #e0f2f1;
+    overflow: hidden;
+  }
+
+  /* Floating leaves background */
+  .leaf {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-image: url('/static/images/leaf.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.6;
+    animation-name: floatLeaf;
+    animation-duration: 10s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+
+  @keyframes floatLeaf {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+    100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+  }
+
+  .login-container {
+    background: #ffffffdd;
+    padding: 40px 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 350px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+    animation: fadeIn 1s ease forwards;
+  }
+
+  .login-container h2 {
+    margin-bottom: 25px;
+    color: #388e3c;
+    font-weight: 700;
+    animation: slideDown 0.8s ease forwards;
+  }
+
+  .login-container form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .input-field {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .input-field input {
+    width: 100%;
+    padding: 12px 40px 12px 15px; /* space for eye icon */
+    border-radius: 50px;
+    border: 1px solid #ccc;
+    outline: none;
+    background: #fff;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-sizing: border-box; /* ✅ keeps it inside the container */
 }
-/* ... rest of your CSS ... */
+
+
+  .input-field input:focus {
+    border-color: #4caf50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+  }
+
+  .input-field label {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    color: #999;
+    font-size: 16px;
+    pointer-events: none;
+    background: transparent;
+    transition: 0.3s;
+    padding: 0 5px;
+  }
+
+  .input-field input:focus + label,
+  .input-field input:not(:placeholder-shown) + label {
+    top: -10px;
+    left: 20px;
+    font-size: 12px;
+    color: #4caf50;
+    background: #fff;
+    border-radius: 3px;
+  }
+
+  .toggle-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    color: #666;
+    transition: color 0.3s ease;
+  }
+
+  .toggle-icon:hover {
+    color: #333;
+  }
+
+  .forgot-password {
+    text-align: right;
+    margin-top: -10px;
+    margin-bottom: 15px;
+    font-size: 14px;
+  }
+
+  .forgot-password a {
+    color: #4caf50;
+    text-decoration: none;
+    transition: 0.3s;
+  }
+
+  .forgot-password a:hover {
+    text-decoration: underline;
+  }
+
+  .login-btn {
+    padding: 12px;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .login-btn:hover {
+    background: #43a047;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  }
+
+  .login-footer {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #555;
+  }
+
+  .login-footer a {
+    color: #4caf50;
+    text-decoration: none;
+    transition: 0.3s;
+  }
+
+  .login-footer a:hover {
+    text-decoration: underline;
+  }
+
+  @keyframes fadeIn {
+    0% { opacity:0; transform: scale(0.95); }
+    100% { opacity:1; transform: scale(1); }
+  }
+
+  @keyframes slideDown {
+    0% { opacity:0; transform: translateY(-20px); }
+    100% { opacity:1; transform: translateY(0); }
+  }
+
 </style>
 
-<!-- Floating leaves -->
+<!-- Floating leaves container -->
 <div id="leaves">
   {% for i in range(8) %}
     <div class="leaf" style="left:{{ 10 + i*10 }}%; animation-delay: {{ i*1.5 }}s;"></div>
@@ -62,7 +228,9 @@ body {
 <script>
 function togglePassword() {
     const passwordField = document.getElementById("password");
-    passwordField.type = passwordField.type === "password" ? "text" : "password";
+    const type = passwordField.type === "password" ? "text" : "password";
+    passwordField.type = type;
 }
 </script>
+
 {% endblock %}

@@ -13,7 +13,8 @@ from flask import jsonify
 from email.mime.text import MIMEText
 
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='Templates')
+
 app.secret_key = "your_secret_key"  # Replace with a strong random value
 
 # ===== Email Config for Flask-Mail =====
@@ -828,6 +829,7 @@ def thanks():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
 
 
 

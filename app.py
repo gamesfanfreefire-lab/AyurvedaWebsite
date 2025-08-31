@@ -310,10 +310,14 @@ def register():
 # ===== Login =====
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # Redirect already logged-in users
+    # Redirect if already logged in
     if session.get("user_id"):
         return redirect(url_for("home"))
-        
+
+    # Ensure cart always exists
+    if "cart" not in session:
+        session["cart"] = []
+
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
@@ -344,16 +348,14 @@ def login():
                 session["user_name"] = user[1]
                 flash("Login successful!", "success")
                 return redirect(url_for("home"))
-            else:
-                flash("Invalid email or password.", "danger")
-        else:
-            flash("Invalid email or password.", "danger")
 
-    if "cart" not in session:
-        session["cart"] = []
-    print("Session contents:", dict(session))
+        flash("Invalid email or password.", "danger")
+        return render_template("login.html")
 
+    # ✅ Always return something for GET
+    print("DEBUG: Returning login.html")
     return render_template("login.html")
+
 
 
    
@@ -826,6 +828,7 @@ def thanks():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
 
 
 

@@ -313,7 +313,7 @@ def login():
     # Redirect already logged-in users
     if session.get("user_id"):
         return redirect(url_for("home"))
-        return render_template("login.html")
+        
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
@@ -340,7 +340,6 @@ def login():
                 stored_hash = stored_hash.encode("utf-8")
 
             if bcrypt.checkpw(password.encode("utf-8"), stored_hash):
-                # Successful login
                 session["user_id"] = user[0]
                 session["user_name"] = user[1]
                 flash("Login successful!", "success")
@@ -350,11 +349,12 @@ def login():
         else:
             flash("Invalid email or password.", "danger")
 
-    # GET request or failed POST
-    # Ensure session keys used in template exist
     if "cart" not in session:
         session["cart"] = []
     print("Session contents:", dict(session))
+
+    return render_template("login.html")
+
 
    
 
@@ -826,6 +826,7 @@ def thanks():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
 
 
 
